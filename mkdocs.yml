@@ -2,10 +2,15 @@ site_name: Despliegue de aplicaciones web
 site_url: https://mydomain.org/mysite
 theme:
   name: material
+  features:
+    - highlight
   
 markdown_extensions:
   - admonition
-  - codehilite
+  - codehilite:
+      guess_lang: false
+  - pymdownx.highlight:
+      linenums: true
 
 nav:
   - 'Tema 4': 
