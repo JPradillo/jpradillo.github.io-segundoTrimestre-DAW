@@ -14,4 +14,4 @@ markdown_extensions:
 
 nav:
   - 'Tema 4': 
-    - 'Práctica 4.1': 'practica4-1.md'
+    - 'Práctica 4.1': 'index.md'
