@@ -3,12 +3,12 @@
 ## Conexión mediante SSH
 Para esta práctica nos conectaremos mediante ssh a nuestra máquina virtual. Para ello ejecutamos el comando `ssh nuestro_usuario@ip_máquina` en el símbolo de sistema de nuestro ordenador.
 
-![alt text](assets/imagenes/image.png)
+![Conexión por SSH](assets/imagenes/1ConexionSSH.png)
 
 ## Preparación del entorno
 Es muy importante, que antes de empezar, eliminemos las entradas del archivo `/etc/hosts` para que las pruebas de resolución se realicen exclusivamente a través del servidor DNS.
 
-![alt text](assets/imagenes/image-1.png)
+![Reparación](assets/imagenes/2Reparacion.png)
 
 ### Istalación de Bind9
 Primero que nada actualizamos nuestro sistema con el comando `sudo apt-get update` y cuando termine la actualización instalamos bind9, el cual es el estándar de facto para servidores DNS. Esto lo haremos con el comando:
@@ -19,13 +19,13 @@ sudo apt-get install bind9 bind9utils bind9-doc
 
 La versión 9 es la recomendada para usarse y la que vamos a utilizar ya que garantiza la interoperabilidad con otros sistemas DNS, haciendo que sea una opción robusta y completa para la mayoría de casos de uso relacionados con servidores DNS.
 
-![alt text](assets/imagenes/image-2.png)
+![Instalación Bind9](assets/imagenes/3InstalacionBind9.png)
 
 Ejecutamos el comando `named -v` para ver si está instalado correctamente. En mi caso no salía asique tuve que agregarlo a mi PATH.
 
 Agregamos `/usr/sbin` a nuestro PATH temporalmente con el comando `export PATH=$PATH:/usr/sbin` y posteriormente ejecutamos el comando `named -v` otra vez y debería aparecer la versión que tenemos.
 
-![alt text](assets/imagenes/image-3.png)
+![Configuración del PATH](assets/imagenes/4ConfiguracionPATH.png)
 
 ### Configuración del servidor
 
@@ -37,24 +37,24 @@ Ya solo nos queda cambiar la línea `OPTIONS="-u bind"` por el texto:
 OPTIONS = "-u bind -4"
 ```
 
-![alt text](assets/imagenes/image-4.png)
+![Configuración del Servidor](assets/imagenes/5ConfiguracionServidor.png)
 
 Tras esto tendremos que guardar los cambios con `CTRL + X` y luego reiniciar el servicio con `sudo systemctl restart bind9` para comprobar que la configuración ha sido correctamente editada.
 
-![alt text](assets/imagenes/image-5.png)
+![Reinicio Bind9](assets/imagenes/6ReinicioBind9.png)
 
 Ejecutamos el comando `sudo nano /etc/bind/named.conf` para saber las referencias a los archivos donde deberemos hacer la configuración, ubicados en el mismo directorio.
 
-![alt text](assets/imagenes/image-6.png)
+![archivo named.conf](assets/imagenes/7Archivo_namedconf.png)
 
 ### Configuración de los archivos
 Hacer una copia de seguridad de los archivos de configuración cada vez que se va a realizar un cambio es una buena práctica, para así, si causa algun tipo de error siempre se puede volver a la versión anterior.
 
 #### *named.conf.options*
 
-![alt text](assets/imagenes/image-7.png)
+![Copia de seguridad del archivo named.conf.options](assets/imagenes/8CopiaSeguridad.png)
 
-![alt text](assets/imagenes/image-8.png)
+![Comprobación](assets/imagenes/9Comprobacion.png)
 
 Con este comando lo que estamos haciendo es guardar una copia en del archivo `/etc/bind/named.conf.options` y de esta manera tener la posibilidad de volver a la configuración inicial.
 
@@ -72,8 +72,8 @@ acl confiables {
 
 En la dirección IP cambiaremos la `X` por el valor de nuestra red local. En mi caso sería `192.168.254.0`.
 
-![alt text](assets/imagenes/image-9.png)
-![alt text](assets/imagenes/image-10.png)
+![Edición del archivo con nano](assets/imagenes/10Abrimos-configuracion-con-nano.png)
+![Bloque acl confiables](assets/imagenes/11acl-confiables.png)
 
 Aquí lo que estamos haciendo es crear un bloque donde iremos poniendo las distintas IP que pueden hacer consultas desde nuestra red.
 
@@ -89,24 +89,23 @@ options {
 }
 ```
 
-![alt text](assets/imagenes/image-16.png)
+![Habilitamos la recursividad](assets/imagenes/12HabilitamosRecursividad.png)
 
 De esta forma configuramos que solo pueda realizar consultas recursivas aquellas IP que se encuentren en la lista `confiables` que hemos creado anteriormente.
 
 ##### Restricciones para las consultas DNS
 
-Posteriormente definimos quién puede realizar consultas DNS al servidor, dando permiso sólo a las direcciones que hay en la lista `confiables`. Para ello añadimos
-`allow-query { confiables; };` al bloque de código `options {...}`.
+Posteriormente definimos quién puede realizar consultas DNS al servidor, dando permiso sólo a las direcciones que hay en la lista `confiables`. Para ello añadimos `allow-query { confiables; };` al bloque de código `options {...}`.
 
-![alt text](assets/imagenes/image-13.png)
+![Restricciones para las consultas DNS](assets/imagenes/13ConsultasDNS-servidor.png)
 
 ##### Transferencia de zonas
 
 En este apartado lo que haremos será añadir una línea más a nuestro bloque `options {...}` como venimios haciendo hasta ahora. En este caso será la línea `allow-transfer { none; };`. Lo que hacemos con esto es impider las transferencias de zona, las cuales son copias completas de las bases de datos DNS.
 
-Básicamente lo que estamos es añadir una medida de seguridad para que otros servidores no puedan obtener información sobre las zonas configuradas en el servidor.
+Básicamente lo que estamos haciendo, es añadir una medida de seguridad para que otros servidores no puedan obtener información sobre las zonas configuradas en el servidor.
 
-![alt text](assets/imagenes/image-14.png)
+![Transferencia de zonas](assets/imagenes/14TransferenciaZonas.png)
 
 ##### Configuración del servidor
 
@@ -114,19 +113,19 @@ Configuramos el servidor para que escuche consultas DNS en el puerto 53 y en la 
 
 Para ello simplemente hay que añadir la línea `listen-on port 53{ 192.168.254.1; };` en la siguiente línea.
 
-![alt text](assets/imagenes/image-16.png)
+![Consultas DNS en el puerto 53](assets/imagenes/15Puerto53.png)
 
 ##### Habilitación de la recursión
 
 Ahora habilitaremos la recursividad para que el servidor DNS pueda realizar consultas recursivas. Para ello simplemente añadimos la línea `recursion yes;` en la siguiente línea. Esto lo que va a hacer es hacer que el servidor pueda buscar respuestas en otros servidores DNS si no obtiene la respuesta localmente.
 
-![alt text](assets/imagenes/image-17.png)
+![Habilitación de la recursión](assets/imagenes/16HabilitamosRecursion.png)
 
 ##### Configuración total
 
 Finalmente, con los cambios realizados, el archivo `/etc/bind/named.conf.options` quedaría de esta manera:
 
-![alt text](assets/imagenes/image-18.png)
+![Configuración total](assets/imagenes/17ConfiguracionTotal.png)
 
 >ℹ️Info
 >
@@ -142,15 +141,15 @@ Finalmente para comprobar que el archivo está correctamente configurado simplem
 sudo named-checkconf
 ```
 
-![alt text](assets/imagenes/image-19.png)
+![Comprobación de la configuración](assets/imagenes/18ComprobacionConfiguracion.png)
 
 Si todo está correcto, no mostrará ningún mensaje de error y tenemos que proceder a reiniciar el servicio con el comando `sudo systemctl restart bind9`.
 
-![alt text](assets/imagenes/image-20.png)
+![Reinicio Bind9](assets/imagenes/19ReinicioBind9.png)
 
 En el caso de que al ejecutar el comando `sudo named-checkconf` nos de algun error, simplemente tenemos que ir a la línea que nos dice y colocar los datos que te proporciona al lanzar dicho error. Por ejemplo, si te ha faltado un `;` te pondrá algo tal que:
 
-![alt text](assets/imagenes/image-21.png)
+![Mensaje Error](assets/imagenes/20MensajeError.png)
 
 Aquí lo que te está diciendo el error es que falta un `;` al final del primer bloque que hemos creado, justo antes de `options {...}`.
 
@@ -160,7 +159,7 @@ Este caso solo necesitaremos añadir un par de líneas indicando que el servidor
 
 Para ello primero tenemos que guardar la configuración por defecto como hicimos con el archivo anterior, para tener una opción de poder volver a la configuración inicial. Simplemente tenemos que ejecutar el comando `sudo cp /etc/bind/named.conf.local /etc/bind/named.conf.local.backup` y ya estaría hecha la copia de seguridad y podemos proceder a cambiar la configuración de dicho archivo.
 
-![alt text](assets/imagenes/image-22.png)
+![Copia de seguridad del archivo named.conf.local](assets/imagenes/21CopiaSeguridad.png)
 
 Después de haber hecho la copia de seguridad tenemos que añadir el siguiente bloque de texto:
 
@@ -171,7 +170,7 @@ zone "deaw.es" {
 };
 ```
 
-![alt text](assets/imagenes/image-23.png)
+![Ruta donde ubicamos nuestro archivo de zona](assets/imagenes/22RutaArchivoZona.png)
 
 ##### Creación del archivo de zona
 
@@ -216,7 +215,7 @@ Con `debian IN A 192.168.254.1` lo que queremos es asociar el nombre `debian` al
 
 En resumen, este archivo lo que hace es configurar el dominio deaw.es, gestionado por el servidor `debian.deaw.es.` con la IP de mi servidor local. Los parámetros del SOA definen como interactúan los servidores primarios y secundarios.
 
-![alt text](assets/imagenes/image-24.png)
+![Configuración del dominio deaw.es](assets/imagenes/23Configuracion-deaw.es.png)
 
 ##### Creación del archivo de zona para la resolución inversa
 
@@ -229,7 +228,7 @@ zone "254.168.192.in-addr.arpa" {
 };
 ```
 
-![alt text](assets/imagenes/image-25.png)
+![Ruta archivo de zona de resolución inversa](assets/imagenes/24RutaArchivoZonaResolucionInversa.png)
 
 Luego, también debemos crear y editar el archivo `/etc/bind/zones/db.254.168.192` en el que pondremos algo similar al archivo del paso anterior.
 
@@ -254,7 +253,7 @@ $TTL    604800
 
 Este bloque es similar al anterior con el cambio de que se configura el registro PTR para la dirección IP `192.168.254.1`, que se resuelve al nombre `debian.deaw.es.`.
 
-![alt text](assets/imagenes/image-26.png)
+![Configuración registro PTR](assets/imagenes/25ConfiguracionRegistroPTR.png)
 
 Para comprobar si la configuración que hemos hecho está hecha correctamente simplemente tenemos que ejcutar los siguientes comandos:
 
@@ -266,21 +265,21 @@ sudo named-checkzone 254.168.192.in-addr.arpa /etc/bind/zones/db.deaw.es
 
 Si todo está correctamente configurado tenemos que ver un mensaje como los siguientes:
 
-![alt text](assets/imagenes/image-27.png)
+![Mensaje de que está correctamente configurado](assets/imagenes/26MensajeConfirmacion.png)
 
-![alt text](assets/imagenes/image-28.png)
+![Mensaje de que está correctamente configurado](assets/imagenes/27MensajeConfirmacion.png)
 
 Si todo está correctamente configurado, procedemos a reiniciar el servicio y a comprobar el estado con el mismo comando que en los primeros pasos `sudo systemctl restart named` y `sudo systemctl status named`.
 
-![alt text](assets/imagenes/image-29.png)
+![Renicio de Bind9](assets/imagenes/28ReinicioBind9.png)
 
 ### Comprobación de las resoluciones y las consultas
 
 Con el comando `dig debian.deaw.es` y `dig -x 192.168.254.1` podemos comprobar las resoluciones directas e inversas que hemos configurado anteriormente.
 
-![alt text](assets/imagenes/image-30.png)
+![Comprobación de la resolución directa](assets/imagenes/29ComprobacionResolucionDirecta.png)
 
-![alt text](assets/imagenes/image-31.png)
+![Comprobación de la resolución inversa](assets/imagenes/30ComprobacionResolucionInversa.png)
 
 ## Cuestiones finales
 
